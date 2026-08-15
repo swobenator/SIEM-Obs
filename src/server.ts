@@ -44,6 +44,24 @@ app.get("/api/health", async (_req, res) => {
     }
 });
 
+app.get("/api/events", async(req, res) =>{
+    try{
+        const result = await pool.query(`
+            select * 
+            from events 
+            order by timestamp desc
+            limit 50
+            `);
+        return res.status(200).json(result.rows);
+    }catch(error){
+        console.error(error);
+
+        return res.status(500).json({
+            error: "Failed to retreive events"
+        });
+    }
+})
+
 app.post("/api/events", async(req, res) =>{
     const result = eventSchema.safeParse(req.body);
 
