@@ -1,5 +1,6 @@
 import express from "express";
 import { pool } from "./database.js"
+import { eventSchema } from "./schemas/event.js"
 
 const app = express();
 const PORT = 3000;
@@ -42,6 +43,38 @@ app.get("/api/health", async (_req, res) => {
             });
     }
 });
+
+app.post("/api/events", async(req, res) =>{
+    const result = eventSchema.safeParse(req.body);
+
+    if(!result.success){
+        return res.status(400).json({
+            error: "Invalid event",
+            details: result.error.flatten()
+        });
+    }
+
+    const { source, level, message, metadata} = result.data;
+
+    try{
+        const dbResult = await pool.query(
+            `
+            insert into events (source, level, message, metadata)
+            values($1, $2, $3, $4)
+            returning *
+            `,
+            [source, level, message, metadata]
+        );
+
+        return res.status(201).json(dbResult.rows[0]);
+    }catch(error){
+        console.error(error);
+
+        return res.status(500).json({
+            error: "Failed to store event"
+        });
+    }
+})
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`)
