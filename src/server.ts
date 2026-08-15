@@ -1,6 +1,7 @@
 import express from "express";
 import { pool } from "./database.js"
 import { eventSchema } from "./schemas/event.js"
+import { querySchema } from "./schemas/query.js"
 
 const app = express();
 const PORT = 3000;
@@ -45,10 +46,18 @@ app.get("/api/health", async (_req, res) => {
 });
 
 app.get("/api/events", async(req, res) =>{
-    const { level, source} = req.query;
+    const parsedQuery = querySchema.safeParse(req.query);
+
+    if (!parsedQuery.success){
+        return res.status(400).json({
+            error: "Invalid query parameters",
+        })
+    }
+
+    const { level, source, limit } = parsedQuery.data;
 
     const conditions: string[] = [];
-    const values: string[] = [];
+    const values: unknown[] = [];
 
     if(typeof level === "string"){
         conditions.push(`level = $${values.length + 1}`)
@@ -60,18 +69,20 @@ app.get("/api/events", async(req, res) =>{
         values.push(source);
     }
 
+    values.push(limit);
+
     let query = `
         select * 
         from events
     `;
 
     if (conditions.length > 0){
-        query += `where ${conditions.join(" and ")}`;
+        query += ` where ${conditions.join(" and ")}`;
     }
 
     query += `
         ORDER BY timestamp DESC
-        LIMIT 50
+        LIMIT $${values.length}
     `;
 
     try{
