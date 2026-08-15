@@ -8,3 +8,6 @@ CREATE TABLE events(
     message TEXT NOT NULL,
     metadata JSONB NOT NULL DEFAULT '{}'
 );
+
+CREATE INDEX idx_events_timestamp
+ON events (timestamp DESC);
