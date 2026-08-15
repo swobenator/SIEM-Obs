@@ -45,13 +45,38 @@ app.get("/api/health", async (_req, res) => {
 });
 
 app.get("/api/events", async(req, res) =>{
+    const { level, source} = req.query;
+
+    const conditions: string[] = [];
+    const values: string[] = [];
+
+    if(typeof level === "string"){
+        conditions.push(`level = $${values.length + 1}`)
+        values.push(level);
+    }
+
+    if(typeof source === "string"){
+        conditions.push(`source = $${values.length + 1}`)
+        values.push(source);
+    }
+
+    let query = `
+        select * 
+        from events
+    `;
+
+    if (conditions.length > 0){
+        query += `where ${conditions.join(" and ")}`;
+    }
+
+    query += `
+        ORDER BY timestamp DESC
+        LIMIT 50
+    `;
+
     try{
-        const result = await pool.query(`
-            select * 
-            from events 
-            order by timestamp desc
-            limit 50
-            `);
+        const result = await pool.query(query, values);
+        
         return res.status(200).json(result.rows);
     }catch(error){
         console.error(error);
