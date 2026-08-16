@@ -4,6 +4,7 @@ import { eventSchema } from "./schemas/event.js"
 import { querySchema } from "./schemas/query.js"
 import { decodeCursor } from "./schemas/cursor.js"
 import { encodeCursor } from "./schemas/cursor.js"
+import { eventBatchSchema } from "./schemas/batch.js"
 
 const app = express();
 const PORT = 3000;
@@ -23,7 +24,7 @@ let event: LogEvent = {
 };
 
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb"}));
 
 app.get("/", (_req, res) => {
     res.json({ status: event.message });
@@ -139,36 +140,116 @@ app.get("/api/events", async (req, res) => {
 })
 
 app.post("/api/events", async (req, res) => {
-    const result = eventSchema.safeParse(req.body);
+    const parsedEvent = eventSchema.safeParse(req.body);
 
-    if (!result.success) {
+    if (!parsedEvent.success) {
         return res.status(400).json({
             error: "Invalid event",
-            details: result.error.flatten()
         });
     }
 
-    const { source, level, message, metadata } = result.data;
+    const {
+        timestamp,
+        level,
+        source,
+        message,
+        metadata,
+    } = parsedEvent.data;
 
     try {
-        const dbResult = await pool.query(
+        const result = await pool.query(
             `
-            insert into events (source, level, message, metadata)
-            values($1, $2, $3, $4)
-            returning *
+                INSERT INTO events (
+                    timestamp,
+                    level,
+                    source,
+                    message,
+                    metadata
+                )
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING *
             `,
-            [source, level, message, metadata]
+            [
+                timestamp,
+                level,
+                source,
+                message,
+                metadata,
+            ]
         );
 
-        return res.status(201).json(dbResult.rows[0]);
+        return res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error(error);
 
         return res.status(500).json({
-            error: "Failed to store event"
+            error: "Failed to create event",
         });
     }
-})
+});
+
+app.post("/api/events/batch", async (req, res) => {
+    const parsedBatch = eventBatchSchema.safeParse(req.body);
+
+    if (!parsedBatch.success) {
+        return res.status(400).json({
+            error: "Invalid event batch",
+        });
+    }
+
+    const { events } = parsedBatch.data;
+
+    const client = await pool.connect();
+
+    try {
+        await client.query("BEGIN");
+
+        const values: unknown[] = [];
+
+        const placeholders = events.map((event, index) => {
+            const offset = index * 5;
+
+            values.push(
+                event.timestamp,
+                event.level,
+                event.source,
+                event.message,
+                event.metadata
+            );
+
+            return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`;
+        });
+
+        await client.query(
+            `
+        INSERT INTO events (
+            timestamp,
+            level,
+            source,
+            message,
+            metadata
+        )
+        VALUES ${placeholders.join(", ")}
+            `, values
+        );
+
+        await client.query("COMMIT");
+
+        return res.status(201).json({
+            inserted: events.length,
+        });
+    } catch (error) {
+        await client.query("ROLLBACK");
+
+        console.error(error);
+
+        return res.status(500).json({
+            error: "Failed to ingest events",
+        });
+    } finally {
+        client.release();
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`)
