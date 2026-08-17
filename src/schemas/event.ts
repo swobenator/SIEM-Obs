@@ -8,4 +8,5 @@ export const eventSchema = z.object({
     metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
+export type Event = z.infer<typeof eventSchema>;
 export type EventInput = z.infer<typeof eventSchema>;
