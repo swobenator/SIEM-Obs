@@ -13,6 +13,11 @@ export function startFileCollector(
     async function processFile() {
         const content = await readFile(filePath, "utf8");
 
+        if (content.length < offset) {
+            offset = 0;
+            buffer = "";
+        }
+
         const newContent = content.slice(offset);
 
         if (newContent.length === 0) {
