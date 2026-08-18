@@ -1,4 +1,5 @@
 import { watch } from "node:fs";
+import { dirname, basename } from "node:path";
 import { readFile } from "node:fs/promises";
 import { parseLogLine } from "./parser.js";
 import type { Event } from "../schemas/event.js";
@@ -45,8 +46,13 @@ export function startFileCollector(
         }
     }
 
-    const watcher = watch(filePath, () => {
-        processFile().catch(console.error);
+    const directory = dirname(filePath);
+    const filename = basename(filePath);
+
+    const watcher = watch(directory, (eventType, changedFile) => {
+        if (changedFile === filename) {
+            processFile().catch(console.error);
+        }
     });
 
     processFile().catch(console.error);
