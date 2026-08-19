@@ -1,3 +1,5 @@
+import { logger } from "./logger.js";
+
 export async function retryWithBackoff<T>(
     operation: () => Promise<T>,
     maxRetries = 5,
@@ -24,10 +26,9 @@ export async function retryWithBackoff<T>(
 
             onRetry?.();
 
-            console.error(
+            logger.warn(
                 `Operation failed. Retrying in ${delay}ms...`
             );
-
             await new Promise<void>((resolve, reject) => {
                 const timer = setTimeout(resolve, delay);
 

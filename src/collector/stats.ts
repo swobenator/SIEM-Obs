@@ -1,3 +1,5 @@
+import { logger } from "./logger.js";
+
 export class CollectorStats {
     eventsReceived = 0;
     batchesSent = 0;
@@ -5,13 +7,14 @@ export class CollectorStats {
     sendFailures = 0;
     retries = 0;
 
-    log() {
-        console.log({
-            eventsReceived: this.eventsReceived,
-            batchesSent: this.batchesSent,
-            eventsSent: this.eventsSent,
-            sendFailures: this.sendFailures,
-            retries: this.retries,
-        });
+        log() {
+            logger.info(
+                `stats eventsReceived=${this.eventsReceived} ` +
+                `batchesSent=${this.batchesSent} ` +
+                `eventsSent=${this.eventsSent} ` +
+                `sendFailures=${this.sendFailures} ` +
+                `retries=${this.retries}`
+            );
+        }
     }
-}
+
