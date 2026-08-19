@@ -2,6 +2,7 @@ import { startFileCollector } from "./fileCollector.js";
 import { EventBuffer } from "./buffer.js";
 import { sendEvents } from "./apiClient.js";
 import { CollectorStats } from "./stats.js";
+import { logger } from "./logger.js";
 
 const abortController = new AbortController();
 
@@ -34,10 +35,11 @@ const stopCollector = startFileCollector(
         buffer.add(events);
     }
 );
-console.log("Log collector started");
+
+logger.info("Log collector started");
 
 process.on("SIGINT", async () => {
-    console.log("Stopping log collector...");
+    logger.info("Stopping log collector...");
     abortController.abort();
 
     clearInterval(statsTimer);
