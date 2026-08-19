@@ -3,13 +3,20 @@ import { retryWithBackoff } from "./retry.js";
 
 const MAX_BATCH_SIZE = 50;
 const FLUSH_INTERVAL = 1000;
+type FlushStats = {
+    onSuccess?: (eventCount: number) => void;
+    onFailure?: () => void;
+    onRetry?: () => void;
+};
 
 export class EventBuffer {
     private events: Event[] = [];
     private timer: NodeJS.Timeout;
 
     constructor(
-        private onFlush: (events: Event[]) => Promise<void>
+        private onFlush: (events: Event[]) => Promise<unknown>,
+        private stats?: FlushStats,
+        private signal?: AbortSignal
     ) {
         this.timer = setInterval(() => {
             this.flush().catch(console.error);
@@ -32,10 +39,23 @@ export class EventBuffer {
         const events = this.events;
 
         try {
-            await retryWithBackoff(() => this.onFlush(events));
+            await retryWithBackoff(
+                () => this.onFlush(events),
+                5,
+                () => this.stats?.onRetry?.(),
+                this.signal
+            );
 
             this.events = [];
+
+            this.stats?.onSuccess?.(events.length);
         } catch (error) {
+            if (error instanceof Error && error.message === "Retry cancelled") {
+                return;
+            }
+
+            this.stats?.onFailure?.();
+
             console.error("Failed to flush events:", error);
         }
     }
