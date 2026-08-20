@@ -1,6 +1,7 @@
 import type { Event } from "../schemas/event.js";
+import { config } from "../config.js";
 
-const API_URL = "http://localhost:3000/api/events/batch";
+const API_URL = `${config.apiUrl}/api/events/batch`;
 
 export async function sendEvents(events: Event[]) {
     const response = await fetch(API_URL, {

@@ -1,8 +1,9 @@
 import { logger } from "./logger.js";
+import { config } from "../config.js";
 
 export async function retryWithBackoff<T>(
     operation: () => Promise<T>,
-    maxRetries = 5,
+    maxRetries = config.maxRetries,
     onRetry?: () => void,
     signal?: AbortSignal
 ): Promise<T> {

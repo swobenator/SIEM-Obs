@@ -1,9 +1,10 @@
 import type { Event } from "../schemas/event.js";
 import { retryWithBackoff } from "./retry.js";
 import { logger } from "./logger.js";
+import { config } from "../config.js";
 
-const MAX_BATCH_SIZE = 50;
-const FLUSH_INTERVAL = 1000;
+const MAX_BATCH_SIZE = config.batchSize;
+const FLUSH_INTERVAL = config.flushIntervalMs;
 type FlushStats = {
     onSuccess?: (eventCount: number) => void;
     onFailure?: () => void;
