@@ -3,6 +3,8 @@ import { EventBuffer } from "./buffer.js";
 import { sendEvents } from "./apiClient.js";
 import { CollectorStats } from "./stats.js";
 import { logger } from "./logger.js";
+import { config } from "../config.js";
+
 
 const abortController = new AbortController();
 
@@ -28,7 +30,7 @@ const buffer = new EventBuffer(
 const stats = new CollectorStats();
 
 const stopCollector = startFileCollector(
-    "logs/application.log",
+    config.logFilePath,
     (events) => {
         stats.eventsReceived += events.length;
 

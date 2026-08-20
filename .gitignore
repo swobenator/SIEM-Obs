@@ -7,7 +7,7 @@ dist/
 #Env
 .env
 .env.*
-|.env.example
+!.env.example
 
 #Logs
 *.log
