@@ -27,7 +27,7 @@ let event: LogEvent = {
 app.use(express.json({ limit: "1mb"}));
 
 app.get("/", (_req, res) => {
-    res.json({ status: event.message });
+    res.json({ status: "ok" });
 });
 
 app.get("/api/health", async (_req, res) => {
