@@ -2,27 +2,10 @@ import express from "express";
 import { pool } from "./database.js"
 import { eventSchema } from "./schemas/event.js"
 import { querySchema } from "./schemas/query.js"
-import { decodeCursor } from "./schemas/cursor.js"
-import { encodeCursor } from "./schemas/cursor.js"
+import { decodeCursor, encodeCursor } from "./schemas/cursor.js"
 import { eventBatchSchema } from "./schemas/batch.js"
 
-const app = express();
-const PORT = 3000;
-
-interface LogEvent {
-    id: string,
-    timestamp: Date,
-    level: "INFO" | "ERROR" | "ALERT",
-    message: string;
-}
-
-let event: LogEvent = {
-    id: "123",
-    timestamp: new Date(),
-    level: "ERROR",
-    message: "Database connection failed"
-};
-
+export const app = express();
 
 app.use(express.json({ limit: "1mb"}));
 
@@ -134,7 +117,7 @@ app.get("/api/events", async (req, res) => {
         console.error(error);
 
         return res.status(500).json({
-            error: "Failed to retreive events"
+            error: "Failed to retrieve events"
         });
     }
 })
@@ -251,6 +234,3 @@ app.post("/api/events/batch", async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`)
-})
