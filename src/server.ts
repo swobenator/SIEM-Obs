@@ -5,6 +5,7 @@ import { querySchema } from "./schemas/query.js"
 import { decodeCursor, encodeCursor } from "./schemas/cursor.js"
 import { eventBatchSchema } from "./schemas/batch.js"
 import { metrics } from "./metrics.js";
+import { errorHandler } from "./error.js";
 
 export const app = express();
 
@@ -197,9 +198,11 @@ app.post("/api/events/batch", async (req, res) => {
 
     const { events } = parsedBatch.data;
 
-    const client = await pool.connect();
+    let client;
 
     try {
+        client = await pool.connect();
+
         await client.query("BEGIN");
 
         const values: unknown[] = [];
@@ -237,7 +240,13 @@ app.post("/api/events/batch", async (req, res) => {
             inserted: events.length,
         });
     } catch (error) {
-        await client.query("ROLLBACK");
+        if (client) {
+            try {
+                await client.query("ROLLBACK");
+            } catch (rollbackError) {
+                console.error("Rollback failed:", rollbackError);
+            }
+        }
 
         console.error(error);
 
@@ -245,7 +254,10 @@ app.post("/api/events/batch", async (req, res) => {
             error: "Failed to ingest events",
         });
     } finally {
-        client.release();
+        if (client) {
+            client.release();
+        }
     }
 });
 
+app.use(errorHandler);
