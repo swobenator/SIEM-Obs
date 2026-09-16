@@ -6,10 +6,13 @@ import { decodeCursor, encodeCursor } from "./schemas/cursor.js"
 import { eventBatchSchema } from "./schemas/batch.js"
 import { metrics } from "./metrics.js";
 import { errorHandler } from "./error.js";
+import { requestLogger } from "./middleware/requestLogger.js";
 
 export const app = express();
 
 app.use(express.json({ limit: "1mb" }));
+
+app.use(requestLogger(metrics));
 
 app.get("/", (_req, res) => {
     res.json({ status: "ok" });

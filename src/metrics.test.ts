@@ -11,6 +11,10 @@ describe("Metrics", () => {
             batchesProcessed: 0,
             flushFailures: 0,
             retries: 0,
+            httpRequests: 0,
+            http4xx: 0,
+            http5xx: 0,
+            httpRequestDurationMs: 0,
         });
     });
 
@@ -75,6 +79,24 @@ describe("Metrics", () => {
             batchesProcessed: 2,
             flushFailures: 0,
             retries: 0,
+            httpRequests: 0,
+            http4xx: 0,
+            http5xx: 0,
+            httpRequestDurationMs: 0,
+        });
+    });
+    it("records HTTP request metrics", () => {
+        const metrics = new Metrics();
+
+        metrics.recordHttpRequest(200, 25);
+        metrics.recordHttpRequest(404, 10);
+        metrics.recordHttpRequest(500, 15);
+
+        expect(metrics.getSnapshot()).toMatchObject({
+            httpRequests: 3,
+            http4xx: 1,
+            http5xx: 1,
+            httpRequestDurationMs: 50,
         });
     });
 });

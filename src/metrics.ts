@@ -4,6 +4,10 @@ export type MetricsSnapshot = {
     batchesProcessed: number;
     flushFailures: number;
     retries: number;
+    httpRequests: number;
+    http4xx: number;
+    http5xx: number;
+    httpRequestDurationMs: number;
 };
 
 export class Metrics {
@@ -12,6 +16,10 @@ export class Metrics {
     private batchesProcessed = 0;
     private flushFailures = 0;
     private retries = 0;
+    private httpRequests = 0;
+    private http4xx = 0;
+    private http5xx = 0;
+    private httpRequestDurationMs = 0;
 
     recordEventsReceived(count: number) {
         this.eventsReceived += count;
@@ -33,6 +41,19 @@ export class Metrics {
         this.retries += 1;
     }
 
+    recordHttpRequest(statusCode: number, durationMs: number) {
+        this.httpRequests += 1;
+        this.httpRequestDurationMs += durationMs;
+
+        if (statusCode >= 400 && statusCode < 500) {
+            this.http4xx += 1;
+        }
+
+        if (statusCode >= 500) {
+            this.http5xx += 1;
+        }
+    }
+
     getSnapshot(): MetricsSnapshot {
         return {
             eventsReceived: this.eventsReceived,
@@ -40,6 +61,10 @@ export class Metrics {
             batchesProcessed: this.batchesProcessed,
             flushFailures: this.flushFailures,
             retries: this.retries,
+            httpRequests: this.httpRequests,
+            http4xx: this.http4xx,
+            http5xx: this.http5xx,
+            httpRequestDurationMs: this.httpRequestDurationMs,
         };
     }
 }
