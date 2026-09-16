@@ -46,23 +46,24 @@ describe("GET /api/health", () => {
             databaseTime: "2026-08-21T12:00:00.000Z",
         });
     });
-});
+    it("returns 500 when the database query fails", async () => {
+        vi.spyOn(pool, "query").mockRejectedValueOnce(
+            new Error("Database unavailable")
+        );
 
-it("returns 500 when the database query fails", async () => {
-    vi.spyOn(pool, "query").mockRejectedValueOnce(
-        new Error("Database unavailable")
-    );
+        const response = await request(app)
+            .get("/api/health");
 
-    const response = await request(app)
-        .get("/api/health");
+        expect(response.status).toBe(500);
 
-    expect(response.status).toBe(500);
-
-    expect(response.body).toEqual({
-        status: "error",
-        message: "Database connection failed",
+        expect(response.body).toEqual({
+            status: "error",
+            message: "Database connection failed",
+        });
     });
 });
+
+
 
 describe("GET /api/events", () => {
     it("returns 400 for invalid query parameters", async () => {
@@ -263,7 +264,6 @@ describe("GET /api/events", () => {
 
         const cursor = firstResponse.body.nextCursor;
 
-        console.log("Generated cursor:", cursor);
 
         expect(cursor).toEqual(expect.any(String));
 
@@ -271,7 +271,6 @@ describe("GET /api/events", () => {
         const secondResponse = await request(app)
             .get(`/api/events?limit=2&before=${encodeURIComponent(cursor)}`);
 
-        console.log("Second response:", secondResponse.status, secondResponse.body);
         expect(secondResponse.status).toBe(200);
 
         expect(secondResponse.body.data).toHaveLength(1);
@@ -381,6 +380,193 @@ describe("GET /api/events", () => {
 
         expect(response.body).toEqual({
             error: "Failed to retrieve events",
+        });
+    });
+});
+
+describe("POST /api/events", () => {
+    it("rejects an event with an invalid level", async () => {
+        const response = await request(app)
+            .post("/api/events")
+            .send({
+                timestamp: "2026-08-21T10:00:00Z",
+                level: "INVALID",
+                source: "application",
+                message: "Application started",
+                metadata: {},
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Invalid event",
+        });
+    });
+
+    it("rejects an event with an empty message", async () => {
+        const response = await request(app)
+            .post("/api/events")
+            .send({
+                timestamp: "2026-08-21T10:00:00Z",
+                level: "INFO",
+                source: "application",
+                message: "",
+                metadata: {},
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Invalid event",
+        });
+    });
+
+    it("rejects an event with an invalid timestamp", async () => {
+        const response = await request(app)
+            .post("/api/events")
+            .send({
+                timestamp: "not-a-date",
+                level: "INFO",
+                source: "application",
+                message: "Application started",
+                metadata: {},
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Invalid event",
+        });
+    });
+});
+
+describe("POST /api/events/batch", () => {
+    it("rejects an empty event batch", async () => {
+        const response = await request(app)
+            .post("/api/events/batch")
+            .send({
+                events: [],
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Invalid event batch",
+        });
+    });
+
+    it("rejects a batch containing an invalid event", async () => {
+        const response = await request(app)
+            .post("/api/events/batch")
+            .send({
+                events: [
+                    {
+                        timestamp: "2026-08-21T10:00:00Z",
+                        level: "INFO",
+                        source: "application",
+                        message: "Valid event",
+                        metadata: {},
+                    },
+                    {
+                        timestamp: "2026-08-21T10:00:00Z",
+                        level: "INVALID",
+                        source: "application",
+                        message: "Invalid event",
+                        metadata: {},
+                    },
+                ],
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Invalid event batch",
+        });
+    });
+    it("accepts a valid event batch", async () => {
+        const response = await request(app)
+            .post("/api/events/batch")
+            .send({
+                events: [
+                    {
+                        timestamp: "2026-08-21T10:00:00Z",
+                        level: "INFO",
+                        source: "application",
+                        message: "Batch event 1",
+                        metadata: {},
+                    },
+                    {
+                        timestamp: "2026-08-21T10:01:00Z",
+                        level: "ERROR",
+                        source: "application",
+                        message: "Batch event 2",
+                        metadata: {
+                            code: "TEST_ERROR",
+                        },
+                    },
+                ],
+            });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toEqual({
+            inserted: 2,
+        });
+    });
+    it("rolls back the transaction when the insert fails", async () => {
+        const client = {
+            query: vi.fn()
+                .mockResolvedValueOnce({ rows: [] }) // BEGIN
+                .mockRejectedValueOnce(new Error("Insert failed")) // INSERT
+                .mockResolvedValueOnce({ rows: [] }), // ROLLBACK
+            release: vi.fn(),
+        };
+
+        vi.spyOn(pool, "connect").mockResolvedValueOnce(client as any);
+
+        const response = await request(app)
+            .post("/api/events/batch")
+            .send({
+                events: [
+                    {
+                        timestamp: "2026-01-01T00:00:00.000Z",
+                        level: "INFO",
+                        source: "test",
+                        message: "transaction test",
+                        metadata: {},
+                    },
+                ],
+            });
+
+        expect(response.status).toBe(500);
+
+        expect(response.body).toEqual({
+            error: "Failed to ingest events",
+        });
+
+        expect(client.query).toHaveBeenNthCalledWith(1, "BEGIN");
+
+        expect(client.query).toHaveBeenNthCalledWith(
+            2,
+            expect.stringContaining("INSERT INTO events"),
+            expect.any(Array)
+        );
+
+        expect(client.query).toHaveBeenNthCalledWith(3, "ROLLBACK");
+
+        expect(client.release).toHaveBeenCalledTimes(1);
+    });
+    it("rejects batches larger than 1000 events", async () => {
+        const events = Array.from({ length: 1001 }, (_, index) => ({
+            timestamp: "2026-01-01T00:00:00.000Z",
+            level: "INFO",
+            source: "test",
+            message: `event ${index}`,
+            metadata: {},
+        }));
+
+        const response = await request(app)
+            .post("/api/events/batch")
+            .send({ events });
+
+        expect(response.status).toBe(400);
+
+        expect(response.body).toEqual({
+            error: "Invalid event batch",
         });
     });
 });
