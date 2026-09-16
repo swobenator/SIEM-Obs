@@ -299,4 +299,88 @@ describe("GET /api/events", () => {
             retries: expect.any(Number),
         });
     });
+    it("filters events by level", async () => {
+        const query = vi.spyOn(pool, "query").mockResolvedValueOnce({
+            rows: [],
+        } as any);
+
+        const response = await request(app)
+            .get("/api/events?level=ERROR");
+
+        expect(response.status).toBe(200);
+
+        expect(query).toHaveBeenCalledWith(
+            expect.stringContaining("level = $1"),
+            expect.arrayContaining(["ERROR", 51])
+        );
+    });
+    it("filters events by source", async () => {
+        const query = vi.spyOn(pool, "query").mockResolvedValueOnce({
+            rows: [],
+        } as any);
+
+        const response = await request(app)
+            .get("/api/events?source=application");
+
+        expect(response.status).toBe(200);
+
+        expect(query).toHaveBeenCalledWith(
+            expect.stringContaining("source = $1"),
+            expect.arrayContaining(["application", 51])
+        );
+    });
+    it("filters events by date range", async () => {
+        const query = vi.spyOn(pool, "query").mockResolvedValueOnce({
+            rows: [],
+        } as any);
+
+        const from = "2026-08-21T10:00:00Z";
+        const to = "2026-08-21T12:00:00Z";
+
+        const response = await request(app)
+            .get(`/api/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+
+        expect(response.status).toBe(200);
+
+        expect(query).toHaveBeenCalledWith(
+            expect.stringContaining("timestamp >= $1"),
+            expect.arrayContaining([from, to, 51])
+        );
+
+        expect(query.mock.calls[0][0]).toContain("timestamp <= $2");
+    });
+    it("returns 400 for invalid date filters", async () => {
+        const response = await request(app)
+            .get("/api/events?from=not-a-date");
+
+        expect(response.status).toBe(400);
+
+        expect(response.body).toEqual({
+            error: "Invalid query parameters",
+        });
+    });
+    it("returns 400 for an invalid cursor", async () => {
+        const response = await request(app)
+            .get("/api/events?before=not-a-valid-cursor");
+
+        expect(response.status).toBe(400);
+
+        expect(response.body).toEqual({
+            error: "Invalid cursor",
+        });
+    });
+    it("returns 500 when retrieving events fails", async () => {
+        vi.spyOn(pool, "query").mockRejectedValueOnce(
+            new Error("Database unavailable")
+        );
+
+        const response = await request(app)
+            .get("/api/events");
+
+        expect(response.status).toBe(500);
+
+        expect(response.body).toEqual({
+            error: "Failed to retrieve events",
+        });
+    });
 });

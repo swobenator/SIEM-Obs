@@ -8,7 +8,7 @@ import { metrics } from "./metrics.js";
 
 export const app = express();
 
-app.use(express.json({ limit: "1mb"}));
+app.use(express.json({ limit: "1mb" }));
 
 app.get("/", (_req, res) => {
     res.json({ status: "ok" });
@@ -45,7 +45,7 @@ app.get("/api/events", async (req, res) => {
         })
     }
 
-    const { level, source, limit, before } = parsedQuery.data;
+    const { level, source, from, to, limit, before } = parsedQuery.data;
 
     let cursor;
 
@@ -70,6 +70,16 @@ app.get("/api/events", async (req, res) => {
     if (typeof source === "string") {
         conditions.push(`source = $${values.length + 1}`)
         values.push(source);
+    }
+
+    if (typeof from === "string") {
+        conditions.push(`timestamp >= $${values.length + 1}`);
+        values.push(from);
+    }
+
+    if (typeof to === "string") {
+        conditions.push(`timestamp <= $${values.length + 1}`);
+        values.push(to);
     }
 
     if (cursor) {
