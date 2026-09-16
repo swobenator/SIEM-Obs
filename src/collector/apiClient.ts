@@ -8,6 +8,7 @@ export async function sendEvents(events: Event[]) {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${config.apiKey}`,
         },
         body: JSON.stringify({
             events,

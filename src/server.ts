@@ -7,12 +7,17 @@ import { eventBatchSchema } from "./schemas/batch.js"
 import { metrics } from "./metrics.js";
 import { errorHandler } from "./error.js";
 import { requestLogger } from "./middleware/requestLogger.js";
+import { config } from "./config.js";
+import { apiKeyAuth } from "./middleware/apiKeyAuth.js";
 
 export const app = express();
 
 app.use(express.json({ limit: "1mb" }));
 
 app.use(requestLogger(metrics));
+
+app.use("/api/events", apiKeyAuth(config.apiKey));
+app.use("/api/metrics", apiKeyAuth(config.apiKey));
 
 app.get("/", (_req, res) => {
     res.json({ status: "ok" });

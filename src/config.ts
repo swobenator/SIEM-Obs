@@ -47,4 +47,5 @@ export const config = {
     dbUser: required("DB_USER"),
     dbPassword: required("DB_PASSWORD"),
     dbName: required("DB_NAME"),
+    apiKey: required("API_KEY"),
 };

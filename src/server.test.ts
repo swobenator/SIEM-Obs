@@ -68,7 +68,8 @@ describe("GET /api/health", () => {
 describe("GET /api/events", () => {
     it("returns 400 for invalid query parameters", async () => {
         const response = await request(app)
-            .get("/api/events?limit=invalid");
+            .get("/api/events?limit=invalid")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(response.status).toBe(400);
 
@@ -99,7 +100,8 @@ describe("GET /api/events", () => {
         } as any);
 
         const response = await request(app)
-            .get("/api/events?limit=5");
+            .get("/api/events?limit=5")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(response.status).toBe(200);
 
@@ -192,7 +194,8 @@ describe("GET /api/events", () => {
             } as any);
 
         const response = await request(app)
-            .get("/api/events?limit=2");
+            .get("/api/events?limit=2")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(response.status).toBe(200);
 
@@ -258,7 +261,8 @@ describe("GET /api/events", () => {
 
         // First page
         const firstResponse = await request(app)
-            .get("/api/events?limit=2");
+            .get("/api/events?limit=2")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(firstResponse.status).toBe(200);
 
@@ -269,7 +273,8 @@ describe("GET /api/events", () => {
 
         // Second page using the cursor
         const secondResponse = await request(app)
-            .get(`/api/events?limit=2&before=${encodeURIComponent(cursor)}`);
+            .get(`/api/events?limit=2&before=${encodeURIComponent(cursor)}`)
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(secondResponse.status).toBe(200);
 
@@ -286,7 +291,8 @@ describe("GET /api/events", () => {
     });
     it("returns metrics", async () => {
         const response = await request(app)
-            .get("/api/metrics");
+            .get("/api/metrics")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(response.status).toBe(200);
 
@@ -304,7 +310,8 @@ describe("GET /api/events", () => {
         } as any);
 
         const response = await request(app)
-            .get("/api/events?level=ERROR");
+            .get("/api/events?level=ERROR")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(response.status).toBe(200);
 
@@ -319,7 +326,8 @@ describe("GET /api/events", () => {
         } as any);
 
         const response = await request(app)
-            .get("/api/events?source=application");
+            .get("/api/events?source=application")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(response.status).toBe(200);
 
@@ -337,7 +345,8 @@ describe("GET /api/events", () => {
         const to = "2026-08-21T12:00:00Z";
 
         const response = await request(app)
-            .get(`/api/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+            .get(`/api/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(response.status).toBe(200);
 
@@ -350,7 +359,8 @@ describe("GET /api/events", () => {
     });
     it("returns 400 for invalid date filters", async () => {
         const response = await request(app)
-            .get("/api/events?from=not-a-date");
+            .get("/api/events?from=not-a-date")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(response.status).toBe(400);
 
@@ -360,7 +370,8 @@ describe("GET /api/events", () => {
     });
     it("returns 400 for an invalid cursor", async () => {
         const response = await request(app)
-            .get("/api/events?before=not-a-valid-cursor");
+            .get("/api/events?before=not-a-valid-cursor")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(response.status).toBe(400);
 
@@ -374,7 +385,8 @@ describe("GET /api/events", () => {
         );
 
         const response = await request(app)
-            .get("/api/events");
+            .get("/api/events")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
 
         expect(response.status).toBe(500);
 
@@ -388,6 +400,7 @@ describe("POST /api/events", () => {
     it("rejects an event with an invalid level", async () => {
         const response = await request(app)
             .post("/api/events")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`)
             .send({
                 timestamp: "2026-08-21T10:00:00Z",
                 level: "INVALID",
@@ -405,6 +418,7 @@ describe("POST /api/events", () => {
     it("rejects an event with an empty message", async () => {
         const response = await request(app)
             .post("/api/events")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`)
             .send({
                 timestamp: "2026-08-21T10:00:00Z",
                 level: "INFO",
@@ -422,6 +436,7 @@ describe("POST /api/events", () => {
     it("rejects an event with an invalid timestamp", async () => {
         const response = await request(app)
             .post("/api/events")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`)
             .send({
                 timestamp: "not-a-date",
                 level: "INFO",
@@ -435,12 +450,27 @@ describe("POST /api/events", () => {
             error: "Invalid event",
         });
     });
+    it("rejects unauthenticated event queries", async () => {
+        const response = await request(app)
+            .get("/api/events");
+
+        expect(response.status).toBe(401);
+    });
+
+    it("allows authenticated event queries", async () => {
+        const response = await request(app)
+            .get("/api/events")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
+
+        expect(response.status).toBe(200);
+    });
 });
 
 describe("POST /api/events/batch", () => {
     it("rejects an empty event batch", async () => {
         const response = await request(app)
             .post("/api/events/batch")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`)
             .send({
                 events: [],
             });
@@ -454,6 +484,7 @@ describe("POST /api/events/batch", () => {
     it("rejects a batch containing an invalid event", async () => {
         const response = await request(app)
             .post("/api/events/batch")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`)
             .send({
                 events: [
                     {
@@ -481,6 +512,7 @@ describe("POST /api/events/batch", () => {
     it("accepts a valid event batch", async () => {
         const response = await request(app)
             .post("/api/events/batch")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`)
             .send({
                 events: [
                     {
@@ -520,6 +552,7 @@ describe("POST /api/events/batch", () => {
 
         const response = await request(app)
             .post("/api/events/batch")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`)
             .send({
                 events: [
                     {
@@ -561,7 +594,9 @@ describe("POST /api/events/batch", () => {
 
         const response = await request(app)
             .post("/api/events/batch")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`)
             .send({ events });
+
 
         expect(response.status).toBe(400);
 
@@ -569,4 +604,5 @@ describe("POST /api/events/batch", () => {
             error: "Invalid event batch",
         });
     });
+
 });
