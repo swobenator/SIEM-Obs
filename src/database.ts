@@ -1,11 +1,12 @@
 import pg from "pg";
+import { config } from "./config.js";
 
 const { Pool } = pg;
 
 export const pool = new Pool({
-    host: "localhost",
-    port: 5432,
-    user: "siem",
-    password: "siem_dev_password",
-    database: "siem"
+    host: config.dbHost,
+    port: config.dbPort,
+    user: config.dbUser,
+    password: config.dbPassword,
+    database: config.dbName,
 });
