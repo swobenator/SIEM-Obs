@@ -40,4 +40,11 @@ export const config = {
     batchSize: positiveInteger("BATCH_SIZE"),
     flushIntervalMs: positiveInteger("FLUSH_INTERVAL_MS"),
     maxRetries: positiveInteger("MAX_RETRIES"),
+
+    port: positiveInteger("PORT"),
+    dbHost: required("DB_HOST"),
+    dbPort: positiveInteger("DB_PORT"),
+    dbUser: required("DB_USER"),
+    dbPassword: required("DB_PASSWORD"),
+    dbName: required("DB_NAME"),
 };
