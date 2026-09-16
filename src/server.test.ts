@@ -285,4 +285,18 @@ describe("GET /api/events", () => {
 
         expect(query).toHaveBeenCalledTimes(2);
     });
+    it("returns metrics", async () => {
+        const response = await request(app)
+            .get("/api/metrics");
+
+        expect(response.status).toBe(200);
+
+        expect(response.body).toMatchObject({
+            eventsReceived: expect.any(Number),
+            eventsProcessed: expect.any(Number),
+            batchesProcessed: expect.any(Number),
+            flushFailures: expect.any(Number),
+            retries: expect.any(Number),
+        });
+    });
 });

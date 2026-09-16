@@ -4,6 +4,7 @@ import { eventSchema } from "./schemas/event.js"
 import { querySchema } from "./schemas/query.js"
 import { decodeCursor, encodeCursor } from "./schemas/cursor.js"
 import { eventBatchSchema } from "./schemas/batch.js"
+import { metrics } from "./metrics.js";
 
 export const app = express();
 
@@ -11,6 +12,10 @@ app.use(express.json({ limit: "1mb"}));
 
 app.get("/", (_req, res) => {
     res.json({ status: "ok" });
+});
+
+app.get("/api/metrics", (_req, res) => {
+    res.json(metrics.getSnapshot());
 });
 
 app.get("/api/health", async (_req, res) => {

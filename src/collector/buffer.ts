@@ -18,7 +18,8 @@ export class EventBuffer {
     constructor(
         private onFlush: (events: Event[]) => Promise<unknown>,
         private stats?: FlushStats,
-        private signal?: AbortSignal
+        private signal?: AbortSignal,
+        private maxRetries = 5
     ) {
         this.timer = setInterval(() => {
             this.flush().catch(console.error);
@@ -43,7 +44,7 @@ export class EventBuffer {
         try {
             await retryWithBackoff(
                 () => this.onFlush(events),
-                5,
+                this.maxRetries,
                 () => this.stats?.onRetry?.(),
                 this.signal
             );
