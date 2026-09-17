@@ -464,6 +464,25 @@ describe("POST /api/events", () => {
 
         expect(response.status).toBe(200);
     });
+    it("returns rate limit headers", async () => {
+        const response = await request(app)
+            .get("/api/events")
+            .set("Authorization", `Bearer ${process.env.API_KEY}`);
+
+        expect(response.status).toBe(200);
+
+        expect(response.headers["x-ratelimit-limit"]).toBe(
+            process.env.RATE_LIMIT_MAX
+        );
+
+        expect(
+            response.headers["x-ratelimit-remaining"]
+        ).toBeDefined();
+
+        expect(
+            response.headers["x-ratelimit-reset"]
+        ).toBeDefined();
+    });
 });
 
 describe("POST /api/events/batch", () => {
