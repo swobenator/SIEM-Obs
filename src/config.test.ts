@@ -17,5 +17,13 @@ describe("config", () => {
         expect(config.dbUser).toBe(process.env.DB_USER);
         expect(config.dbPassword).toBe(process.env.DB_PASSWORD);
         expect(config.dbName).toBe(process.env.DB_NAME);
+
+        expect(config.rateLimitMax).toBe(
+            Number(process.env.RATE_LIMIT_MAX)
+        );
+
+        expect(config.rateLimitWindowMs).toBe(
+            Number(process.env.RATE_LIMIT_WINDOW_MS)
+        );
     });
 });

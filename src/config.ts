@@ -48,4 +48,7 @@ export const config = {
     dbPassword: required("DB_PASSWORD"),
     dbName: required("DB_NAME"),
     apiKey: required("API_KEY"),
+
+    rateLimitMax: positiveInteger("RATE_LIMIT_MAX"),
+    rateLimitWindowMs: positiveInteger("RATE_LIMIT_WINDOW_MS"),
 };
