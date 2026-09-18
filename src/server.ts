@@ -286,4 +286,10 @@ app.post("/api/events/batch", async (req, res) => {
     }
 });
 
+app.get("/api/live", (_req, res) => {
+    res.json({
+        status: "ok",
+    });
+});
+
 app.use(errorHandler);

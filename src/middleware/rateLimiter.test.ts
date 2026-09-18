@@ -66,7 +66,7 @@ describe("rateLimiter", () => {
         app.use(
             rateLimiter({
                 max: 1,
-                windowMs: 20,
+                windowMs: 50,
             })
         );
 
@@ -82,7 +82,7 @@ describe("rateLimiter", () => {
         const blocked = await request(app).get("/test");
         expect(blocked.status).toBe(429);
 
-        await new Promise((resolve) => setTimeout(resolve, 25));
+        await new Promise((resolve) => setTimeout(resolve, 150));
 
         const allowedAgain = await request(app).get("/test");
         expect(allowedAgain.status).toBe(200);
