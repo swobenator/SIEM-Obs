@@ -15,6 +15,7 @@ export function requestLogger(metrics: Metrics) {
             );
 
             logger.info("HTTP request completed", {
+                requestId: req.requestId,
                 method: req.method,
                 path: req.path,
                 statusCode: res.statusCode,

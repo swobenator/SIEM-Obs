@@ -11,8 +11,11 @@ import { config } from "./config.js";
 import { apiKeyAuth } from "./middleware/apiKeyAuth.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 import { logger } from "./logger.js";
+import { requestId } from "./middleware/requestId.js";
 
 export const app = express();
+
+app.use(requestId);
 
 app.use(express.json({ limit: "1mb" }));
 
@@ -56,6 +59,7 @@ app.get("/api/health", async (_req, res) => {
         });
     } catch (error) {
         logger.error("Database health check failed", {
+            requestId: _req.requestId,
             error:
                 error instanceof Error
                     ? error.message
@@ -162,6 +166,7 @@ app.get("/api/events", async (req, res) => {
         });
     } catch (error) {
         logger.error("Failed to retrieve events", {
+            requestId: req.requestId,
             error:
                 error instanceof Error
                     ? error.message
@@ -216,6 +221,7 @@ app.post("/api/events", async (req, res) => {
         return res.status(201).json(result.rows[0]);
     } catch (error) {
         logger.error("Failed to create event", {
+            requestId: req.requestId,
             error:
                 error instanceof Error
                     ? error.message
@@ -286,6 +292,7 @@ app.post("/api/events/batch", async (req, res) => {
                 await client.query("ROLLBACK");
             } catch (rollbackError) {
                 logger.error("Batch rollback failed", {
+                    requestId: req.requestId,
                     error:
                         rollbackError instanceof Error
                             ? rollbackError.message
@@ -295,6 +302,7 @@ app.post("/api/events/batch", async (req, res) => {
         }
 
         logger.error("Failed to ingest events", {
+            requestId: req.requestId,
             error:
                 error instanceof Error
                     ? error.message

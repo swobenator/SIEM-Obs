@@ -3,6 +3,7 @@ import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
 import { Metrics } from "../metrics.js";
 import { requestLogger } from "./requestLogger.js";
+import { requestId } from "./requestId.js";
 
 describe("requestLogger", () => {
     it("records a successful HTTP request", async () => {
@@ -10,6 +11,7 @@ describe("requestLogger", () => {
 
         const testApp = express();
 
+        testApp.use(requestId);
         testApp.use(requestLogger(testMetrics));
 
         testApp.get("/test", (_req, res) => {
@@ -32,6 +34,7 @@ describe("requestLogger", () => {
 
         const testApp = express();
 
+        testApp.use(requestId);
         testApp.use(requestLogger(testMetrics));
 
         testApp.get("/test", (_req, res) => {
@@ -56,6 +59,7 @@ describe("requestLogger", () => {
 
         const testApp = express();
 
+        testApp.use(requestId);
         testApp.use(requestLogger(testMetrics));
 
         testApp.get("/test", (_req, res) => {
@@ -80,6 +84,7 @@ describe("requestLogger", () => {
 
         const testApp = express();
 
+        testApp.use(requestId);
         testApp.use(requestLogger(testMetrics));
 
         testApp.get("/test", async (_req, res) => {
@@ -136,7 +141,9 @@ describe("requestLogger", () => {
             path: "/test",
             statusCode: 200,
         });
-
+        expect(record.requestId).toEqual(
+            response.headers["x-request-id"]
+        );
         expect(record.path).not.toContain("token");
         expect(output).not.toContain("super-secret-api-key");
     });

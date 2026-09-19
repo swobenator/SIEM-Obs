@@ -18,12 +18,12 @@ export function errorHandler(
     _next: express.NextFunction
 ) {
     logger.error("Unhandled application error", {
+        requestId: _req.requestId,
         error:
             error instanceof Error
                 ? error.message
                 : String(error),
     });
-
     if (error instanceof AppError) {
         return res.status(error.statusCode).json({
             error: error.message,
