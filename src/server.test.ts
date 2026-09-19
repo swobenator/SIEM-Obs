@@ -623,5 +623,16 @@ describe("POST /api/events/batch", () => {
             error: "Invalid event batch",
         });
     });
+describe("GET /api/live", () => {
+    it("returns a live status", async () => {
+        const response = await request(app)
+            .get("/api/live");
 
+        expect(response.status).toBe(200);
+
+        expect(response.body).toEqual({
+            status: "ok",
+        });
+    });
+});
 });
