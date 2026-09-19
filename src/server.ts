@@ -10,6 +10,7 @@ import { requestLogger } from "./middleware/requestLogger.js";
 import { config } from "./config.js";
 import { apiKeyAuth } from "./middleware/apiKeyAuth.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
+import { logger } from "./logger.js";
 
 export const app = express();
 
@@ -54,8 +55,12 @@ app.get("/api/health", async (_req, res) => {
             databaseTime: result.rows[0].now,
         });
     } catch (error) {
-        console.error(error);
-
+        logger.error("Database health check failed", {
+            error:
+                error instanceof Error
+                    ? error.message
+                    : String(error),
+        });
         res.status(500).json({
             status: "error",
             message: "Database connection failed",
@@ -156,7 +161,12 @@ app.get("/api/events", async (req, res) => {
             nextCursor,
         });
     } catch (error) {
-        console.error(error);
+        logger.error("Failed to retrieve events", {
+            error:
+                error instanceof Error
+                    ? error.message
+                    : String(error),
+        });
 
         return res.status(500).json({
             error: "Failed to retrieve events"
@@ -205,7 +215,12 @@ app.post("/api/events", async (req, res) => {
 
         return res.status(201).json(result.rows[0]);
     } catch (error) {
-        console.error(error);
+        logger.error("Failed to create event", {
+            error:
+                error instanceof Error
+                    ? error.message
+                    : String(error),
+        });
 
         return res.status(500).json({
             error: "Failed to create event",
@@ -270,11 +285,21 @@ app.post("/api/events/batch", async (req, res) => {
             try {
                 await client.query("ROLLBACK");
             } catch (rollbackError) {
-                console.error("Rollback failed:", rollbackError);
+                logger.error("Batch rollback failed", {
+                    error:
+                        rollbackError instanceof Error
+                            ? rollbackError.message
+                            : String(rollbackError),
+                });
             }
         }
 
-        console.error(error);
+        logger.error("Failed to ingest events", {
+            error:
+                error instanceof Error
+                    ? error.message
+                    : String(error),
+        });
 
         return res.status(500).json({
             error: "Failed to ingest events",

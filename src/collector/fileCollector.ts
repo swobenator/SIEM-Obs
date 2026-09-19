@@ -3,6 +3,7 @@ import { dirname, basename } from "node:path";
 import { readFile } from "node:fs/promises";
 import { parseLogLine } from "./parser.js";
 import type { Event } from "../schemas/event.js";
+import { logger } from "../logger.js";
 
 export function startFileCollector(
     filePath: string,
@@ -51,11 +52,25 @@ export function startFileCollector(
 
     const watcher = watch(directory, (eventType, changedFile) => {
         if (changedFile === filename) {
-            processFile().catch(console.error);
+            processFile().catch((error) => {
+                logger.error("Failed to process log file", {
+                    error:
+                        error instanceof Error
+                            ? error.message
+                            : String(error),
+                });
+            });
         }
     });
 
-    processFile().catch(console.error);
+    processFile().catch((error) => {
+        logger.error("Failed to process log file", {
+            error:
+                error instanceof Error
+                    ? error.message
+                    : String(error),
+        });
+    });
 
     return () => {
         watcher.close();

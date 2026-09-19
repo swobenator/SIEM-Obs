@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import { Metrics } from "../metrics.js";
+import { logger } from "../logger.js";
 
 export function requestLogger(metrics: Metrics) {
     return (req: Request, res: Response, next: NextFunction) => {
@@ -8,11 +9,17 @@ export function requestLogger(metrics: Metrics) {
         res.on("finish", () => {
             const durationMs = Date.now() - start;
 
-            metrics.recordHttpRequest(res.statusCode, durationMs);
-
-            console.log(
-                `${req.method} ${req.originalUrl} ${res.statusCode} ${durationMs}ms`
+            metrics.recordHttpRequest(
+                res.statusCode,
+                durationMs
             );
+
+            logger.info("HTTP request completed", {
+                method: req.method,
+                path: req.path,
+                statusCode: res.statusCode,
+                durationMs,
+            });
         });
 
         next();
