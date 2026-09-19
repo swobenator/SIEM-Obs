@@ -3,9 +3,12 @@ import { config } from "./config.js";
 import { pool } from "./database.js";
 import { createShutdownHandler } from "./shutdown.js";
 import type { Server } from "node:http";
+import { logger } from "./logger.js";
 
 const server: Server = app.listen(config.port, () => {
-    console.log(`Server running at http://localhost:${config.port}`);
+    logger.info("Server started", {
+        port: config.port,
+    });
 });
 
 const shutdown = createShutdownHandler(server, pool);

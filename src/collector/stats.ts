@@ -1,4 +1,4 @@
-import { logger } from "./logger.js";
+import { logger } from "../logger.js";
 
 export class CollectorStats {
     eventsReceived = 0;

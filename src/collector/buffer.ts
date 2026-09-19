@@ -1,10 +1,11 @@
 import type { Event } from "../schemas/event.js";
 import { retryWithBackoff } from "./retry.js";
-import { logger } from "./logger.js";
+import { logger } from "../logger.js";
 import { config } from "../config.js";
 
 const MAX_BATCH_SIZE = config.batchSize;
 const FLUSH_INTERVAL = config.flushIntervalMs;
+
 type FlushStats = {
     onSuccess?: (eventCount: number) => void;
     onFailure?: () => void;
@@ -19,10 +20,17 @@ export class EventBuffer {
         private onFlush: (events: Event[]) => Promise<unknown>,
         private stats?: FlushStats,
         private signal?: AbortSignal,
-        private maxRetries = 5
+        private maxRetries = config.maxRetries
     ) {
         this.timer = setInterval(() => {
-            this.flush().catch(console.error);
+            this.flush().catch((error) => {
+                logger.error("Background flush failed", {
+                    error:
+                        error instanceof Error
+                            ? error.message
+                            : String(error),
+                });
+            });
         }, FLUSH_INTERVAL);
     }
 
@@ -30,7 +38,14 @@ export class EventBuffer {
         this.events.push(...events);
 
         if (this.events.length >= MAX_BATCH_SIZE) {
-            this.flush().catch(console.error);
+            this.flush().catch((error) => {
+                logger.error("Background flush failed", {
+                    error:
+                        error instanceof Error
+                            ? error.message
+                            : String(error),
+                });
+            });
         }
     }
 
@@ -59,12 +74,15 @@ export class EventBuffer {
 
             this.stats?.onFailure?.();
 
-            logger.error(
-                `Failed to flush events: ${error instanceof Error ? error.message : String(error)
-                }`
-            );
+            logger.error("Failed to flush events", {
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : String(error),
+            });
         }
     }
+
     async stop() {
         clearInterval(this.timer);
 

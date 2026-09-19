@@ -1,5 +1,6 @@
 import type { Server } from "node:http";
 import type { Pool } from "pg";
+import { logger } from "./logger.js";
 
 export function createShutdownHandler(
     server: Server,
@@ -14,7 +15,9 @@ export function createShutdownHandler(
 
         isShuttingDown = true;
 
-        console.log(`Received ${signal}. Shutting down...`);
+        logger.info("Shutdown requested", {
+            signal,
+        });
 
         await new Promise<void>((resolve) => {
             server.close(() => {
@@ -24,6 +27,6 @@ export function createShutdownHandler(
 
         await pool.end();
 
-        console.log("Database pool closed.");
+        logger.info("Database pool closed");
     };
 }

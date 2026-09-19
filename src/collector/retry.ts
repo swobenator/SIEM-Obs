@@ -1,4 +1,4 @@
-import { logger } from "./logger.js";
+import { logger } from "../logger.js";
 import { config } from "../config.js";
 
 export async function retryWithBackoff<T>(

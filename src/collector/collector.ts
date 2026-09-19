@@ -2,7 +2,7 @@ import { startFileCollector } from "./fileCollector.js";
 import { EventBuffer } from "./buffer.js";
 import { sendEvents } from "./apiClient.js";
 import { CollectorStats } from "./stats.js";
-import { logger } from "./logger.js";
+import { logger } from "../logger.js";
 import { config } from "../config.js";
 import { metrics } from "../metrics.js";
 
