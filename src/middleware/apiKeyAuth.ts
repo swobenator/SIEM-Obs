@@ -1,10 +1,19 @@
 import { NextFunction, Request, Response } from "express";
+import { logger } from "../logger.js";
 
 export function apiKeyAuth(expectedApiKey: string) {
-    return (_req: Request, res: Response, next: NextFunction) => {
-        const authorization = _req.header("authorization");
+    return (req: Request, res: Response, next: NextFunction) => {
+        const authorization = req.header("authorization");
 
         if (!authorization) {
+            logger.warn("Authentication failed", {
+                event: "authentication_failure",
+                reason: "missing_authorization_header",
+                requestId: req.requestId,
+                method: req.method,
+                path: req.baseUrl + req.path,
+            });
+
             return res.status(401).json({
                 error: "Authentication required",
             });
@@ -17,10 +26,25 @@ export function apiKeyAuth(expectedApiKey: string) {
             !token ||
             token !== expectedApiKey
         ) {
+            logger.warn("Authentication failed", {
+                event: "authentication_failure",
+                reason: "invalid_api_key",
+                requestId: req.requestId,
+                method: req.method,
+                path: req.baseUrl + req.path,
+            });
+
             return res.status(401).json({
                 error: "Invalid API key",
             });
         }
+
+        logger.info("Authentication succeeded", {
+            event: "authentication_success",
+            requestId: req.requestId,
+            method: req.method,
+            path: req.baseUrl + req.path,
+        });
 
         next();
     };

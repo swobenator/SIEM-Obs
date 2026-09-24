@@ -1,7 +1,8 @@
 import express from "express";
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { rateLimiter } from "./rateLimiter.js";
+import { requestId } from "./requestId.js";
 
 describe("rateLimiter", () => {
     it("allows requests until the limit is reached", async () => {
@@ -33,6 +34,12 @@ describe("rateLimiter", () => {
     it("returns 429 after the limit is exceeded", async () => {
         const app = express();
 
+        const consoleWarn = vi
+            .spyOn(console, "warn")
+            .mockImplementation(() => { });
+
+        app.use(requestId);
+
         app.use(
             rateLimiter({
                 max: 2,
@@ -53,11 +60,22 @@ describe("rateLimiter", () => {
 
         expect(response.status).toBe(429);
 
-        expect(response.body).toEqual({
-            error: "Rate limit exceeded",
+        expect(consoleWarn).toHaveBeenCalledTimes(1);
+
+        const output = consoleWarn.mock.calls[0][0];
+        const record = JSON.parse(output);
+
+        expect(record).toMatchObject({
+            level: "WARN",
+            message: "Rate limit exceeded",
+            event: "rate_limit_exceeded",
         });
 
-        expect(response.headers["retry-after"]).toBeDefined();
+        expect(record.requestId).toBe(
+            response.headers["x-request-id"]
+        );
+
+        consoleWarn.mockRestore();
     });
 
     it("resets after the time window expires", async () => {
