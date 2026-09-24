@@ -38,9 +38,6 @@ app.use(
     apiKeyAuth(config.apiKey)
 );
 
-app.use(requestLogger(metrics));
-
-
 app.get("/", (_req, res) => {
     res.json({ status: "ok" });
 });

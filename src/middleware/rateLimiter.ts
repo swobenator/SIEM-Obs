@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { logger } from "../logger.js";
 
 type RateLimitOptions = {
     max: number;
@@ -45,11 +46,17 @@ export function rateLimiter({ max, windowMs }: RateLimitOptions) {
 
             res.setHeader("Retry-After", retryAfter);
 
+            logger.warn("Rate limit exceeded", {
+                event: "rate_limit_exceeded",
+                requestId: req.requestId,
+                method: req.method,
+                path: req.baseUrl + req.path,
+            });
+
             return res.status(429).json({
                 error: "Rate limit exceeded",
             });
         }
-
         next();
     };
 }
