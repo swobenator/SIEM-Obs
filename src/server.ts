@@ -12,8 +12,12 @@ import { apiKeyAuth } from "./middleware/apiKeyAuth.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 import { logger } from "./logger.js";
 import { requestId } from "./middleware/requestId.js";
+import cookieParser from "cookie-parser";
+import { createSession, deleteSession, hasValidSession} from "./authSession.js";
 
 export const app = express();
+
+app.use(cookieParser());
 
 app.use(requestId);
 
@@ -319,6 +323,75 @@ app.post("/api/events/batch", async (req, res) => {
 app.get("/api/live", (_req, res) => {
     res.json({
         status: "ok",
+    });
+});
+
+app.post("/api/auth/login", (req, res) => {
+    const apiKey = req.body?.apiKey;
+
+    if (
+        typeof apiKey !== "string" ||
+        apiKey !== config.apiKey
+    ) {
+        logger.warn("Authentication failed", {
+            event: "authentication_failure",
+            reason: "invalid_login_api_key",
+            requestId: req.requestId,
+            method: req.method,
+            path: req.path,
+        });
+
+        return res.status(401).json({
+            error: "Invalid API key",
+        });
+    }
+
+    const sessionId = createSession();
+
+    res.cookie("siem_session", sessionId, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+        maxAge: 60 * 60 * 1000,
+    });
+
+    logger.info("Authentication succeeded", {
+        event: "authentication_success",
+        method: req.method,
+        path: req.path,
+        requestId: req.requestId,
+    });
+
+    return res.status(200).json({
+        authenticated: true,
+    });
+});
+
+app.post("/api/auth/logout", (req, res) => {
+    const sessionId = req.cookies?.siem_session;
+
+    if (sessionId) {
+        deleteSession(sessionId);
+    }
+
+    res.clearCookie("siem_session");
+
+    return res.status(200).json({
+        authenticated: false,
+    });
+});
+
+app.get("/api/auth/me", (req, res) => {
+    const sessionId = req.cookies?.siem_session;
+
+    if (!sessionId || !hasValidSession(sessionId)) {
+        return res.status(401).json({
+            authenticated: false,
+        });
+    }
+
+    return res.status(200).json({
+        authenticated: true,
     });
 });
 

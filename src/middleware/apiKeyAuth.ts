@@ -1,8 +1,17 @@
 import { NextFunction, Request, Response } from "express";
 import { logger } from "../logger.js";
+import { hasValidSession } from "../authSession.js";
 
 export function apiKeyAuth(expectedApiKey: string) {
     return (req: Request, res: Response, next: NextFunction) => {
+
+        const sessionId = req.cookies?.siem_session;
+
+        if (sessionId && hasValidSession(sessionId)) {
+            next();
+            return;
+        }
+
         const authorization = req.header("authorization");
 
         if (!authorization) {

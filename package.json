@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/swobenator/SIEM-Obs#readme",
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/node": "^26.2.0",
     "@types/pg": "^8.21.0",
@@ -33,6 +34,7 @@
     "vitest": "^4.1.11"
   },
   "dependencies": {
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "pg": "^8.23.0",
