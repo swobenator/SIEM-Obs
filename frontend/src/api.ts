@@ -1,3 +1,5 @@
+import type { EventRecord } from "./types";
+
 export type HealthResponse = {
     status: string;
 };
@@ -72,4 +74,55 @@ export async function getSession(): Promise<boolean> {
     };
 
     return data.authenticated;
+}
+
+export type EventsResponse = {
+    data: EventRecord[];
+    nextCursor?: string;
+};
+
+export type EventFilters = {
+    level?: EventRecord["level"];
+    source?: string;
+    from?: string;
+    to?: string;
+    before?: string;
+};
+
+export async function getEvents(
+    filters: EventFilters = {}
+): Promise<EventsResponse> {
+    const params = new URLSearchParams();
+
+    params.set("limit", "25");
+
+    if (filters.level) {
+        params.set("level", filters.level);
+    }
+
+    if (filters.source) {
+        params.set("source", filters.source);
+    }
+
+    if (filters.from) {
+        params.set("from", filters.from);
+    }
+
+    if (filters.to) {
+        params.set("to", filters.to);
+    }
+
+    if (filters.before) {
+        params.set("before", filters.before);
+    }
+
+    const response = await fetch(`/api/events?${params.toString()}`, {
+        credentials: "include",
+    });
+
+    if (!response.ok) {
+        throw new Error("Events request failed");
+    }
+
+    return response.json() as Promise<EventsResponse>;
 }
