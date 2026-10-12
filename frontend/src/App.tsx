@@ -8,7 +8,7 @@ import {
 } from "./api";
 import type { DashboardMetrics, EventRecord } from "./types";
 import { EventDetails } from "./components/EventDetails";
-
+import { MetricsView } from "./components/MetricsView";
 
 function App() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -360,16 +360,7 @@ function App() {
           )}
 
           {activeView === "metrics" && (
-            <section className="panel">
-              <div className="panel-header">
-                <h3>Metrics</h3>
-                <p>Metrics visualization will be added next.</p>
-              </div>
-
-              <div className="empty-state">
-                Metrics view coming soon.
-              </div>
-            </section>
+            <MetricsView/>
           )}
           {activeView === "events" && (
             <section className="events-page">

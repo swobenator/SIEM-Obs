@@ -4,6 +4,7 @@ import { pool } from "./database.js";
 import { createShutdownHandler } from "./shutdown.js";
 import type { Server } from "node:http";
 import { logger } from "./logger.js";
+import "./collector/collector.js";
 
 const server: Server = app.listen(config.port, () => {
     logger.info("Server started", {

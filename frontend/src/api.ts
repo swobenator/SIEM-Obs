@@ -48,6 +48,14 @@ export async function logout() {
     });
 }
 
+export type MetricsResponse = {
+    eventsReceived: number;
+    eventsProcessed: number;
+    batchesProcessed: number;
+    flushFailures: number;
+    retries: number;
+};
+
 export async function getMetrics(): Promise<DashboardMetrics> {
     const response = await fetch("/api/metrics", {
         credentials: "include",
