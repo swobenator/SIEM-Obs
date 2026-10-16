@@ -1,3 +1,4 @@
+// API integration tests for validation, authentication, event storage, pagination and error paths.
 import {
     afterEach,
     describe,

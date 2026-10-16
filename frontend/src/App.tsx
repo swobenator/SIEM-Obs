@@ -1,3 +1,4 @@
+// Main dashboard shell: authentication, navigation, event search and operational overview.
 import { useEffect, useState, type FormEvent } from "react";
 import {
   getEvents,
@@ -49,6 +50,13 @@ function App() {
     }
   }
 
+  // Set the loading state from user actions before the filter effect fetches results.
+  function beginEventsSearch() {
+    setEventsLoading(true);
+    setEventsError(false);
+  }
+
+  // Resolve the saved browser session and backend availability on initial load.
   useEffect(() => {
     Promise.all([
       getSession(),
@@ -72,11 +80,10 @@ function App() {
       return;
     }
 
-    setMetricsError(false);
-
     getMetrics()
       .then((data) => {
         setMetrics(data);
+        setMetricsError(false);
       })
       .catch(() => {
         setMetrics(null);
@@ -84,13 +91,11 @@ function App() {
       });
   }, [authenticated]);
 
+  // Refresh the current search whenever filters change while the Events view is open.
   useEffect(() => {
     if (!authenticated || activeView !== "events") {
       return;
     }
-
-    setEventsLoading(true);
-    setEventsError(false);
 
     getEvents({
       level: eventLevel || undefined,
@@ -122,6 +127,7 @@ function App() {
     eventTo,
   ]);
 
+  // Use the last-page cursor to append results without discarding the current page.
   async function handleLoadMore() {
     if (!nextCursor || eventsLoading) {
       return;
@@ -143,6 +149,7 @@ function App() {
         before: nextCursor,
       });
 
+      // Preserve already displayed events and append the next page.
       setEvents((current) => [...current, ...response.data]);
       setNextCursor(response.nextCursor);
     } catch {
@@ -227,7 +234,12 @@ function App() {
             <button
               className={`nav-item ${activeView === "events" ? "active" : ""
                 }`}
-              onClick={() => setActiveView("events")}
+              onClick={() => {
+                if (activeView !== "events") {
+                  beginEventsSearch();
+                }
+                setActiveView("events");
+              }}
             >
               Events
             </button>
@@ -386,16 +398,18 @@ function App() {
                   <select
                     id="event-level"
                     value={eventLevel}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      beginEventsSearch();
                       setEventLevel(
                         event.target.value as EventRecord["level"] | ""
-                      )
-                    }
+                      );
+                    }}
                   >
                     <option value="">All levels</option>
                     <option value="INFO">INFO</option>
                     <option value="WARN">WARN</option>
                     <option value="ERROR">ERROR</option>
+                    <option value="CRITICAL">CRITICAL</option>
                   </select>
                 </div>
 
@@ -406,7 +420,10 @@ function App() {
                     type="text"
                     placeholder="e.g. application"
                     value={eventSource}
-                    onChange={(event) => setEventSource(event.target.value)}
+                    onChange={(event) => {
+                      beginEventsSearch();
+                      setEventSource(event.target.value);
+                    }}
                   />
                 </div>
 
@@ -416,7 +433,10 @@ function App() {
                     id="event-from"
                     type="date"
                     value={eventFrom}
-                    onChange={(event) => setEventFrom(event.target.value)}
+                    onChange={(event) => {
+                      beginEventsSearch();
+                      setEventFrom(event.target.value);
+                    }}
                   />
                 </div>
 
@@ -426,13 +446,19 @@ function App() {
                     id="event-to"
                     type="date"
                     value={eventTo}
-                    onChange={(event) => setEventTo(event.target.value)}
+                    onChange={(event) => {
+                      beginEventsSearch();
+                      setEventTo(event.target.value);
+                    }}
                   />
                 </div>
 
                 <button
                   className="clear-filters"
                   onClick={() => {
+                    if (eventLevel || eventSource || eventFrom || eventTo) {
+                      beginEventsSearch();
+                    }
                     setEventLevel("");
                     setEventSource("");
                     setEventFrom("");

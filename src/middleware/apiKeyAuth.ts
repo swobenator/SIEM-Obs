@@ -1,3 +1,4 @@
+// Accepts either a valid browser session cookie or a matching Bearer API key.
 import { NextFunction, Request, Response } from "express";
 import { logger } from "../logger.js";
 import { hasValidSession } from "../authSession.js";
@@ -5,6 +6,7 @@ import { hasValidSession } from "../authSession.js";
 export function apiKeyAuth(expectedApiKey: string) {
     return (req: Request, res: Response, next: NextFunction) => {
 
+        // Browser sessions avoid storing the API key in browser-side request code.
         const sessionId = req.cookies?.siem_session;
 
         if (sessionId && hasValidSession(sessionId)) {

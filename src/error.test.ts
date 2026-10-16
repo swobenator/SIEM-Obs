@@ -1,3 +1,4 @@
+// Covers expected application errors and the generic unexpected-error response.
 import express from "express";
 import request from "supertest";
 import { describe, expect, it } from "vitest";

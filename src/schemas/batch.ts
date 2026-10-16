@@ -1,3 +1,4 @@
+// Limits batch payloads to between 1 and 1,000 events before ingestion.
 import { z } from "zod";
 import { eventSchema } from "./event.js";
 

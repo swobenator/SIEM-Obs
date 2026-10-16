@@ -1,6 +1,8 @@
+// Tracks collector-specific totals and periodically writes a compact summary to the logger.
 import { logger } from "../logger.js";
 
 export class CollectorStats {
+    // These counters are process-local diagnostics, not persisted historical metrics.
     eventsReceived = 0;
     batchesSent = 0;
     eventsSent = 0;

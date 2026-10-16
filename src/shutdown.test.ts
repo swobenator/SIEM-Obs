@@ -1,3 +1,4 @@
+// Covers idempotent shutdown and orderly closure of the HTTP server and database pool.
 import { describe, expect, it, vi } from "vitest";
 import { createShutdownHandler } from "./shutdown.js";
 

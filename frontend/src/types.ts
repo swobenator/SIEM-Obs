@@ -1,3 +1,4 @@
+// Shared frontend types for API event records and dashboard metrics.
 export type DashboardMetrics = {
     eventsReceived: number;
     eventsProcessed: number;

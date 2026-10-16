@@ -1,3 +1,4 @@
+// Covers HTTP completion logs and request metric updates.
 import express from "express";
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";

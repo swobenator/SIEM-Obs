@@ -1,3 +1,4 @@
+// Watches a log file and forwards complete, valid appended lines to the event buffer.
 import { watch } from "node:fs";
 import { dirname, basename } from "node:path";
 import { readFile } from "node:fs/promises";
@@ -9,12 +10,19 @@ export function startFileCollector(
     filePath: string,
     onEvents: (events: Event[]) => void
 ) {
-    let offset = 0;
+    let offset: number | null = null;
     let buffer = "";
 
     async function processFile() {
         const content = await readFile(filePath, "utf8");
 
+        // Start at the current end of the file; only later appended content is ingested.
+        if (offset === null) {
+            offset = content.length;
+            return;
+        }
+
+        // A truncation/rotation reset invalidates the saved offset and partial line.
         if (content.length < offset) {
             offset = 0;
             buffer = "";
@@ -30,6 +38,7 @@ export function startFileCollector(
 
         buffer += newContent;
 
+        // Keep the final fragment until its newline arrives so partial writes are not parsed.
         const lines = buffer.split(/\r?\n/);
 
         buffer = lines.pop() ?? "";
@@ -38,6 +47,7 @@ export function startFileCollector(
             .filter(line => line.trim().length > 0)
             .map(parseLogLine);
 
+        // Skip malformed lines rather than sending invalid records to the API.
         const events: Event[] = parsedEvents.filter(
             (event): event is Event => event !== null
         );

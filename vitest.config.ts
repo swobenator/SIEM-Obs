@@ -1,3 +1,4 @@
+// Restricts Vitest discovery to the backend TypeScript test files.
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({

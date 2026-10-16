@@ -1,3 +1,4 @@
+// Covers collector requests to the batch-ingestion API.
 import { describe, expect, it, vi } from "vitest";
 import type { Event } from "../schemas/event.js";
 import { sendEvents } from "./apiClient.js";

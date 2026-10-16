@@ -1,3 +1,4 @@
+// Wires file watching, buffering, ingestion, metrics and collector lifecycle together.
 import { startFileCollector } from "./fileCollector.js";
 import { EventBuffer } from "./buffer.js";
 import { sendEvents } from "./apiClient.js";
@@ -7,10 +8,12 @@ import { config } from "../config.js";
 import { metrics } from "../metrics.js";
 
 
+// Lets shutdown cancel retry waits rather than leaving the process stuck waiting.
 const abortController = new AbortController();
 
 const stats = new CollectorStats();
 
+// Update collector totals and shared dashboard metrics only from flush callbacks.
 const buffer = new EventBuffer(
     sendEvents,
     {
@@ -51,6 +54,7 @@ const stopCollector = startFileCollector(
 
 logger.info("Log collector started");
 
+// Handle Ctrl+C by stopping new reads, draining the buffer and logging final totals.
 process.on("SIGINT", async () => {
     logger.info("Stopping log collector...");
     abortController.abort();

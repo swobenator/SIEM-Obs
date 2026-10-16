@@ -1,3 +1,4 @@
+// Retries transient operation failures with exponential backoff and optional cancellation.
 import { logger } from "../logger.js";
 import { config } from "../config.js";
 
@@ -7,6 +8,7 @@ export async function retryWithBackoff<T>(
     onRetry?: () => void,
     signal?: AbortSignal
 ): Promise<T> {
+    // Double the wait after each failed attempt to reduce pressure on a struggling API.
     let delay = 1000;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {

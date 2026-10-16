@@ -1,3 +1,4 @@
+// Covers metric counter updates and returned snapshots.
 import { describe, expect, it } from "vitest";
 import { Metrics } from "./metrics.js";
 

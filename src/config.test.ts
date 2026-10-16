@@ -1,3 +1,4 @@
+// Covers required settings and validation of numeric and URL configuration.
 import { describe, expect, it } from "vitest";
 import { config } from "./config.js";
 

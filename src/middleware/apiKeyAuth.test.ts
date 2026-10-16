@@ -1,3 +1,4 @@
+// Covers valid and invalid API keys, browser sessions and missing credentials.
 import express from "express";
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";

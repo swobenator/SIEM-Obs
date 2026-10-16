@@ -1,3 +1,4 @@
+// Typed fetch helpers for the API; browser calls include cookies for session authentication.
 import type { EventRecord } from "./types";
 
 export type HealthResponse = {
@@ -26,6 +27,7 @@ export async function getHealth(): Promise<HealthResponse> {
     return response.json() as Promise<HealthResponse>;
 }
 
+// Exchange the API key for an HTTP-only session cookie used by later browser requests.
 export async function login(apiKey: string) {
     const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -97,6 +99,7 @@ export type EventFilters = {
     before?: string;
 };
 
+// Build query parameters only for filters the user has actually supplied.
 export async function getEvents(
     filters: EventFilters = {}
 ): Promise<EventsResponse> {

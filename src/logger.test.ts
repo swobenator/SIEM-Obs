@@ -1,3 +1,4 @@
+// Covers JSON log structure and routing of messages by severity.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { logger } from "./logger.js";
 
