@@ -1,3 +1,4 @@
+// In-memory counters for collector processing and HTTP request activity (reset on restart).
 export type MetricsSnapshot = {
     eventsReceived: number;
     eventsProcessed: number;
@@ -54,6 +55,7 @@ export class Metrics {
         }
     }
 
+    // Return a point-in-time copy so callers cannot mutate the counters.
     getSnapshot(): MetricsSnapshot {
         return {
             eventsReceived: this.eventsReceived,

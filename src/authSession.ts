@@ -1,3 +1,4 @@
+// Stores expiring browser sessions in process memory; a server restart clears them.
 import { randomUUID } from "node:crypto";
 
 const SESSION_DURATION_MS = 60 * 60 * 1000;
@@ -6,6 +7,7 @@ type Session = {
     expiresAt: number;
 };
 
+// Sessions are intentionally process-local; they are not persisted to the database.
 const sessions = new Map<string, Session>();
 
 export function createSession() {
@@ -25,6 +27,7 @@ export function hasValidSession(sessionId: string) {
         return false;
     }
 
+    // Remove expired entries when they are next checked.
     if (session.expiresAt <= Date.now()) {
         sessions.delete(sessionId);
         return false;

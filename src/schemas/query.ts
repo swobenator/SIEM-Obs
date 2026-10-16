@@ -1,3 +1,4 @@
+// Validates the optional filters and pagination controls accepted by the events endpoint.
 import { z } from "zod";
 
 export const querySchema = z.object({

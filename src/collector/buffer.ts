@@ -1,3 +1,4 @@
+// Buffers events into batches and retries failed sends before returning them to the queue.
 import type { Event } from "../schemas/event.js";
 import { retryWithBackoff } from "./retry.js";
 import { logger } from "../logger.js";
@@ -15,6 +16,7 @@ type FlushStats = {
 export class EventBuffer {
     private events: Event[] = [];
     private timer: NodeJS.Timeout;
+    private inFlightFlush: Promise<void> | null = null;
 
     constructor(
         private onFlush: (events: Event[]) => Promise<unknown>,
@@ -49,42 +51,71 @@ export class EventBuffer {
         }
     }
 
-    private async flush() {
+    private async flush(): Promise<void> {
+        // Never start another flush while one is already running.
+        if (this.inFlightFlush) {
+            await this.inFlightFlush;
+            return;
+        }
+
         if (this.events.length === 0) {
             return;
         }
 
+        // Detach this batch so new arrivals stay in the queue.
         const events = this.events;
+        this.events = [];
+
+        const operation = (async () => {
+            try {
+                await retryWithBackoff(
+                    () => this.onFlush(events),
+                    this.maxRetries,
+                    () => this.stats?.onRetry?.(),
+                    this.signal
+                );
+
+                this.stats?.onSuccess?.(events.length);
+            } catch (error) {
+                // Preserve the failed batch, ahead of newer events.
+                this.events = [...events, ...this.events];
+
+                if (
+                    error instanceof Error &&
+                    error.message === "Retry cancelled"
+                ) {
+                    return;
+                }
+
+                this.stats?.onFailure?.();
+
+                logger.error(
+                    `Failed to flush events: ${error instanceof Error
+                        ? error.message
+                        : String(error)
+                    }`
+                );
+            }
+        })();
+
+        this.inFlightFlush = operation;
 
         try {
-            await retryWithBackoff(
-                () => this.onFlush(events),
-                this.maxRetries,
-                () => this.stats?.onRetry?.(),
-                this.signal
-            );
-
-            this.events = [];
-
-            this.stats?.onSuccess?.(events.length);
-        } catch (error) {
-            if (error instanceof Error && error.message === "Retry cancelled") {
-                return;
+            await operation;
+        } finally {
+            if (this.inFlightFlush === operation) {
+                this.inFlightFlush = null;
             }
-
-            this.stats?.onFailure?.();
-
-            logger.error("Failed to flush events", {
-                error:
-                    error instanceof Error
-                        ? error.message
-                        : String(error),
-            });
         }
     }
 
-    async stop() {
+    // Stop periodic flushes, wait for any active send, then drain remaining events.
+    async stop(): Promise<void> {
         clearInterval(this.timer);
+
+        if (this.inFlightFlush) {
+            await this.inFlightFlush;
+        }
 
         await this.flush();
     }

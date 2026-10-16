@@ -1,3 +1,4 @@
+// Presents a selected event and its metadata in a dismissible detail panel.
 import { useEffect } from "react";
 import type { EventRecord } from "../types";
 
@@ -10,6 +11,7 @@ export function EventDetails({
     event,
     onClose,
 }: EventDetailsProps) {
+    // Support Escape-to-close and remove the listener when the panel is unmounted.
     useEffect(() => {
         function handleKeyDown(event: KeyboardEvent) {
             if (event.key === "Escape") {
@@ -32,6 +34,7 @@ export function EventDetails({
             aria-labelledby="event-details-title"
             onMouseDown={onClose}
         >
+            {/* Clicking inside the panel should not trigger the overlay close handler. */}
             <div
                 className="event-details-panel"
                 onMouseDown={(event) => event.stopPropagation()}

@@ -1,3 +1,4 @@
+// Covers batch flushing, concurrent flushes, retries, failures and shutdown draining.
 import { describe, expect, it, vi } from "vitest";
 import { EventBuffer } from "./buffer.js";
 import type { Event } from "../schemas/event.js";

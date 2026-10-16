@@ -1,3 +1,4 @@
+// Covers generation and propagation of a unique request ID.
 import { describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
 import { requestId } from "./requestId.js";

@@ -1,3 +1,4 @@
+// Sends validated collector batches to the SIEM-Obs ingestion API.
 import type { Event } from "../schemas/event.js";
 import { config } from "../config.js";
 
@@ -15,6 +16,7 @@ export async function sendEvents(events: Event[]) {
         }),
     });
 
+    // Treat non-2xx responses as failed sends so the buffer can retry them.
     if (!response.ok) {
         const body = await response.text();
 

@@ -1,3 +1,4 @@
+// Shared ESLint rules for TypeScript, React Hooks and Vite React refresh.
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'

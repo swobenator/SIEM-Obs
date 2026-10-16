@@ -1,3 +1,4 @@
+// Defines the Express API, middleware pipeline, event endpoints and browser session endpoints.
 import express from "express";
 import { pool } from "./database.js"
 import { eventSchema } from "./schemas/event.js"
@@ -21,6 +22,7 @@ app.use(cookieParser());
 
 app.use(requestId);
 
+// Bound JSON request bodies to limit memory use from oversized payloads.
 app.use(express.json({ limit: "1mb" }));
 
 app.use(requestLogger(metrics));
@@ -73,6 +75,7 @@ app.get("/api/health", async (_req, res) => {
     }
 });
 
+// Build optional filters from validated fields; values are bound as SQL parameters below.
 app.get("/api/events", async (req, res) => {
     const parsedQuery = querySchema.safeParse(req.query);
 
@@ -127,6 +130,7 @@ app.get("/api/events", async (req, res) => {
         values.push(cursor.timestamp, cursor.id);
     }
 
+    // Fetch one extra row to determine whether another page exists.
     values.push(limit + 1);
 
     let query = `
@@ -235,6 +239,7 @@ app.post("/api/events", async (req, res) => {
     }
 });
 
+// Insert each batch in one transaction so a failed batch is rolled back as a unit.
 app.post("/api/events/batch", async (req, res) => {
     const parsedBatch = eventBatchSchema.safeParse(req.body);
 
@@ -251,6 +256,7 @@ app.post("/api/events/batch", async (req, res) => {
     try {
         client = await pool.connect();
 
+        // BEGIN/COMMIT ensures a batch is stored completely or not at all.
         await client.query("BEGIN");
 
         const values: unknown[] = [];
@@ -289,6 +295,7 @@ app.post("/api/events/batch", async (req, res) => {
         });
     } catch (error) {
         if (client) {
+            // Roll back partial work if insertion or commit fails.
             try {
                 await client.query("ROLLBACK");
             } catch (rollbackError) {
@@ -346,6 +353,7 @@ app.post("/api/auth/login", (req, res) => {
         });
     }
 
+    // The raw API key is checked server-side; the browser receives only a session cookie.
     const sessionId = createSession();
 
     res.cookie("siem_session", sessionId, {

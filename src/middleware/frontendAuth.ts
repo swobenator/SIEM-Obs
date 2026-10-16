@@ -1,3 +1,4 @@
+// Protects browser-facing routes that require an active server-side session.
 import { NextFunction, Request, Response } from "express";
 import { hasValidSession } from "../authSession.js";
 

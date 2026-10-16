@@ -1,5 +1,7 @@
+// Read and validate runtime settings once so the application fails fast on invalid configuration.
 import "dotenv/config";
 
+// Required values are rejected early rather than failing later during a request.
 function required(name: string): string {
     const value = process.env[name];
 
@@ -22,6 +24,7 @@ function requiredUrl(name: string): string {
     return value;
 }
 
+// Shared validator for ports, limits and intervals that must be positive integers.
 function positiveInteger(name: string): number {
     const value = Number(required(name));
 

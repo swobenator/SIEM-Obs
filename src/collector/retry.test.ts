@@ -1,3 +1,4 @@
+// Covers retry limits, backoff and cancellation behaviour.
 import { describe, expect, it, vi } from "vitest";
 import { retryWithBackoff } from "./retry.js";
 

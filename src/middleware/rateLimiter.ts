@@ -1,3 +1,4 @@
+// Applies a per-IP, in-memory fixed-window request limit and returns standard limit headers.
 import { NextFunction, Request, Response } from "express";
 import { logger } from "../logger.js";
 
@@ -15,6 +16,7 @@ export function rateLimiter({ max, windowMs }: RateLimitOptions) {
     const requests = new Map<string, RateLimitEntry>();
 
     return (req: Request, res: Response, next: NextFunction) => {
+        // Each IP receives a fresh counter when its current time window expires.
         const now = Date.now();
         const key = req.ip ?? "unknown";
 

@@ -1,5 +1,7 @@
+-- Initial database schema for stored events and timestamp-ordered event queries.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+-- Keep accepted levels and field lengths consistent with the event validation schema.
 CREATE TABLE events(
 
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -21,5 +23,6 @@ CREATE TABLE events(
 
 );
 
+-- Supports newest-first event listing and cursor pagination.
 CREATE INDEX idx_events_timestamp
 ON events (timestamp DESC);

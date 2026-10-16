@@ -1,3 +1,4 @@
+// Covers conversion of log lines into valid events and rejection of malformed input.
 import { describe, expect, it } from "vitest";
 import { parseLogLine } from "./parser.js";
 

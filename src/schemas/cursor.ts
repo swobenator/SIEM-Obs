@@ -1,3 +1,4 @@
+// Encodes and validates the timestamp/ID position used for stable event pagination.
 import { z } from "zod";
 
 const cursorDataSchema = z.object({
@@ -11,6 +12,7 @@ export function encodeCursor(timestamp: Date, id: string): string {
         id,
     };
 
+    // Base64url makes the cursor safe to place in a query parameter; it is not an auth token.
     return Buffer
         .from(JSON.stringify(data))
         .toString("base64url");

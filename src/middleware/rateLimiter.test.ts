@@ -1,3 +1,4 @@
+// Covers request limits, reset windows, response headers and rejection behaviour.
 import express from "express";
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";

@@ -1,3 +1,4 @@
+// Emits structured JSON logs so application events can be searched and processed consistently.
 export type LogLevel = "INFO" | "WARN" | "ERROR";
 
 export type LogContext = Record<string, unknown>;
@@ -7,6 +8,7 @@ function log(
     message: string,
     context: LogContext = {}
 ) {
+    // Put contextual fields and standard fields in one structured JSON record.
     const entry = {
         ...context,
         timestamp: new Date().toISOString(),

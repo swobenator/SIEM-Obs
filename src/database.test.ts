@@ -1,3 +1,4 @@
+// Covers database connection setup and query-facing behaviour.
 import { afterAll, describe, expect, it } from "vitest";
 import { pool } from "./database.js";
 

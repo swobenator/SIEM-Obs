@@ -1,3 +1,4 @@
+// Displays collector metrics and refreshes them periodically while this view is mounted.
 import { useCallback, useEffect, useState } from "react";
 import { getMetrics, type MetricsResponse } from "../api";
 
@@ -8,11 +9,10 @@ export function MetricsView() {
 
     const loadMetrics = useCallback(async () => {
         try {
-            setError(false);
-
             const response = await getMetrics();
 
             setMetrics(response);
+            setError(false);
         } catch {
             setError(true);
         } finally {
@@ -20,16 +20,22 @@ export function MetricsView() {
         }
     }, []);
 
+    // Poll while the metrics screen is mounted, and clear the timer on navigation away.
     useEffect(() => {
-        loadMetrics();
+        // Defer the initial request until effect setup has completed.
+        const initialLoad = window.setTimeout(() => {
+            void loadMetrics();
+        }, 0);
 
         const interval = window.setInterval(loadMetrics, 5000);
 
         return () => {
+            window.clearTimeout(initialLoad);
             window.clearInterval(interval);
         };
     }, [loadMetrics]);
 
+    // Avoid dividing by zero before the collector has received any events.
     const processingRate =
         metrics && metrics.eventsReceived > 0
             ? (metrics.eventsProcessed / metrics.eventsReceived) * 100

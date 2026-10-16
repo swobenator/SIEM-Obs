@@ -1,5 +1,7 @@
+// Shared event contract used to validate incoming data and infer TypeScript event types.
 import { z } from "zod";
 
+// Coerce timestamps to Date values and reject levels/fields outside the event contract.
 export const eventSchema = z.object({
     timestamp: z.coerce.date(),
     level: z.enum(["DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"]),

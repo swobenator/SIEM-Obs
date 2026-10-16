@@ -1,3 +1,4 @@
+// Covers event schema field validation, accepted values and defaults.
 import { describe, expect, it } from "vitest";
 import { eventSchema } from "./event.js";
 

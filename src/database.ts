@@ -1,3 +1,4 @@
+// Shared PostgreSQL connection pool used by API routes and health checks.
 import pg from "pg";
 import { config } from "./config.js";
 
