@@ -448,6 +448,17 @@ nav {
     background: #6ea8ff;
 }
 
+
+.severity-critical {
+    border-color: rgba(255, 77, 109, 0.32);
+    background: rgba(255, 77, 109, 0.12);
+    color: #ff7b91;
+}
+
+.severity-critical .severity-dot {
+    background: #ff4d6d;
+}
+
 .severity-warn {
     border-color: rgba(242, 190, 81, 0.22);
     background: rgba(242, 190, 81, 0.08);

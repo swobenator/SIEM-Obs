@@ -379,7 +379,7 @@ function App() {
               <div className="events-page-header">
                 <div>
                   <div className="eyebrow">OBSERVABILITY</div>
-                  <h2>Events</h2>
+                  <br></br>
                   <p>
                     Review incoming security and application events collected
                     by SIEM-Obs.
