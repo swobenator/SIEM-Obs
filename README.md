@@ -16,6 +16,26 @@ A lightweight security event collection and observability platform built with **
 - **Operational visibility:** structured logs, request IDs, request-duration tracking, health/liveness endpoints, and graceful server/database shutdown handling.
 - **Validation and testing:** Zod request/event schemas, parameterised SQL, Vitest tests, TypeScript checks, frontend linting, and a batch-ingestion benchmark script.
 
+## Application Screenshots
+
+### Dashboard
+
+The dashboard provides an overview of event ingestion and system metrics.
+
+![SIEM-Obs dashboard](docs/screenshots/dashboard.png)
+
+### Event Search
+
+Search and filter collected events by their attributes, including severity and source.
+
+![SIEM-Obs event search](docs/screenshots/events-search.png)
+
+### Event Details
+
+Inspect individual events, including their timestamps, severity levels, sources, messages and available metadata.
+
+![SIEM-Obs event details](docs/screenshots/events-details.png)
+
 ## Architecture
 
 ```mermaid
